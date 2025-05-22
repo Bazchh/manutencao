@@ -6,5 +6,6 @@ test:
   image: python:3.10
   before_script:
     - pip install pytest
+    - export PYTHONPATH=$PYTHONPATH:.
   script:
     - pytest --maxfail=1 --disable-warnings --tb=short
