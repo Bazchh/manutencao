@@ -1,5 +1,5 @@
-from pedidos.estoque import verificar_estoque
-from pedidos.logger import logger
+from estoque import verificar_estoque, estoque
+from logger import logger
 
 def calcular_total(preco_unitario, quantidade, desconto=0):
     if preco_unitario < 0 or quantidade <= 0:
@@ -22,3 +22,16 @@ def processar_pedido(produto_id, quantidade, preco_unitario, desconto=0):
     total = calcular_total(preco_unitario, quantidade, desconto)
     logger.info(f"Pedido processado com sucesso. Total: R${total:.2f}")
     return total
+
+def finalizar_pedido(produto_id, quantidade):
+    try:
+        if not verificar_estoque(produto_id, quantidade):
+            logger.warning(f"Não é possível finalizar: estoque insuficiente para '{produto_id}'.")
+            raise RuntimeError("Estoque insuficiente para finalizar o pedido.")
+        
+        estoque[produto_id] -= quantidade
+        logger.info(f"Pedido finalizado. Estoque atualizado de '{produto_id}': {estoque[produto_id]}")
+        return True
+    except Exception as e:
+        logger.error(f"Erro ao finalizar pedido: {e}")
+        return False

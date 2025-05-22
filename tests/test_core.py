@@ -1,20 +1,37 @@
-import pytest
-from pedidos.core import calcular_total, processar_pedido
+import unittest
+from core import processar_pedido, finalizar_pedido
+from estoque import cadastrar_produto, estoque
 
-def test_calcular_total_sem_desconto():
-    assert calcular_total(10, 2) == 20
+class TestGerenciamentoPedidos(unittest.TestCase):
+    def setUp(self):
+        estoque.clear()
+        estoque["produto_teste"] = 5
 
-def test_calcular_total_com_desconto():
-    assert calcular_total(10, 2, desconto=0.1) == 18
+    def test_cadastrar_produto_sucesso(self):
+        resultado = cadastrar_produto("produto_teste", 10)
+        self.assertTrue(resultado)
+        self.assertEqual(estoque["produto_teste"], 15)
 
-def test_calcular_total_parametros_invalidos():
-    with pytest.raises(ValueError):
-        calcular_total(-5, 2)
+    def test_cadastrar_produto_negativo(self):
+        resultado = cadastrar_produto("produto_teste", -5)
+        self.assertFalse(resultado)
 
-def test_processar_pedido_sucesso():
-    total = processar_pedido("produto_1", 2, 15)
-    assert total == 30
+    def test_processar_pedido_sucesso(self):
+        total = processar_pedido("produto_teste", 2, 10.0)
+        self.assertEqual(total, 20.0)
 
-def test_processar_pedido_estoque_insuficiente():
-    with pytest.raises(RuntimeError):
-        processar_pedido("produto_2", 1, 10)
+    def test_processar_pedido_sem_estoque(self):
+        with self.assertRaises(RuntimeError):
+            processar_pedido("produto_teste", 10, 10.0)
+
+    def test_finalizar_pedido_sucesso(self):
+        sucesso = finalizar_pedido("produto_teste", 2)
+        self.assertTrue(sucesso)
+        self.assertEqual(estoque["produto_teste"], 3)
+
+    def test_finalizar_pedido_sem_estoque(self):
+        sucesso = finalizar_pedido("produto_teste", 10)
+        self.assertFalse(sucesso)
+
+if __name__ == "__main__":
+    unittest.main()
